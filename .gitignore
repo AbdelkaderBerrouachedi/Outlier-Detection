@@ -1,0 +1,8 @@
+__pycache__/
+.idea/
+*.pt
+Save/
+*.pth
+mlp_img/
+visualization/
+data/
