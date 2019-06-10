@@ -113,7 +113,7 @@ if __name__ == '__main__':
     model.cuda()
     rho = torch.zeros([hiddenSize]).cuda()
     rho.fill_(RHO)
-    train(model, data_scaled, rho = rho, numEncodingNeurons= hiddenSize)
+    train(model, data_scaled, rho=rho, numEncodingNeurons=hiddenSize)
 
     print('\n')
     # sampleActual = Variable(torch.Tensor(data_scaled[0, :])).cuda()
