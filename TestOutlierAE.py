@@ -57,10 +57,10 @@ def train(model, data, numEpochs= NUM_EPOCHS, rho = None, numHiddenNeurons = 50 
             noisy_sample = add_noise(dataSample)
 
             sample = Variable(dataSample).cuda()
-            noisy_sample = Variable(noisy_sample).cuda()
+            # noisy_sample = Variable(noisy_sample).cuda()
 
             # ===================forward=====================
-            encoded, encoderLast, decoded = model(noisy_sample)
+            encoded, encoderLast, decoded = model(sample)
             MSE_loss += nn.MSELoss()(decoded, sample)
             if rho is not None:
                 kl_loss = kl_divergence(rho, encoded)*BETA
