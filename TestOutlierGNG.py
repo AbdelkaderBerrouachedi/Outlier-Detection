@@ -34,7 +34,7 @@ if __name__ == '__main__':
     data_scaled = scaler.fit_transform(data[:, :-1])
 
     gng = GrowingNeuralGas(input_data = data_scaled)
-    gng.fit_network(e_b=0.05, e_n=0.006, a_max=8, l=100, a=0.5, d=0.995, passes=20, plot_evolution=False)
+    gng.fit_network(e_b=0.05, e_n=0.006, a_max=8, l=100, a=0.5, d=0.995, passes=10, plot_evolution=False)
     clustered_data = gng.cluster_data()
     # gng.plot_clusters(clustered_data)
 

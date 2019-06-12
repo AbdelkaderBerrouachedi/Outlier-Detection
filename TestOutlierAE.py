@@ -18,13 +18,12 @@ from torch.autograd import Variable
 
 from sklearn import preprocessing
 
-RHO = 0.2
+RHO = 0.3
 BETA = 0.01
-NUM_EPOCHS = 20
-batchSIZE = 32
-hiddenSIZE = 100
-encodedSIZE = 10
-noisePERC = 0.1
+NUM_EPOCHS = 100
+batchSIZE = 128
+encodedSIZE = 2
+noisePERC = 0.05
 
 def kl_divergence(p, q):
     '''
@@ -58,10 +57,10 @@ def train(model, data, numEpochs= NUM_EPOCHS, rho = None, numHiddenNeurons = 50 
             noisy_sample = add_noise(dataSample)
 
             sample = Variable(dataSample).cuda()
-            # noisy_sample = Variable(noisy_sample).cuda()
+            noisy_sample = Variable(noisy_sample).cuda()
 
             # ===================forward=====================
-            encoded, encoderLast, decoded = model(sample)
+            encoded, encoderLast, decoded = model(noisy_sample)
             MSE_loss += nn.MSELoss()(decoded, sample)
             if rho is not None:
                 kl_loss = kl_divergence(rho, encoded)*BETA
@@ -118,7 +117,7 @@ if __name__ == '__main__':
     # gng.plot_clusters(clustered_data)
 
     inputSize = data_scaled.shape[1]
-    hiddenSize = hiddenSIZE
+    hiddenSize = inputSize
     encodedSize = encodedSIZE
     model = AutoEncoder(inputSize, hiddenSize, encodedSize)
     model.cuda()
@@ -153,8 +152,8 @@ if __name__ == '__main__':
     datasetResult = pd.DataFrame()
     datasetResult['X'] = pd.Series(resultToCPU[:, 0], index=datasetOrig.index)
     datasetResult['Y'] = pd.Series(resultToCPU[:, 1], index=datasetOrig.index)
-    datasetResult['Diff'] = pd.Series(diffDecodedActual.data.cpu(), index=datasetOrig.index)
     # datasetResult['Z'] = pd.Series(resultToCPU[:, 2], index=datasetOrig.index)
+    datasetResult['Diff'] = pd.Series(diffDecodedActual.data.cpu(), index=datasetOrig.index)
     datasetResult['Target'] = pd.Series(datasetOrig.iloc[:, -1], index=datasetOrig.index)
     resultFile = str(args.filename)+'_'+'ResultEncoding.csv'
     datasetResult.to_csv(resultFile)
