@@ -17,6 +17,7 @@ from torch.autograd import Variable
 
 
 from sklearn import preprocessing
+from sklearn.utils import shuffle
 
 RHO = 0.3
 BETA = 0.01
@@ -107,6 +108,8 @@ if __name__ == '__main__':
     argparser.add_argument('-f', '--filename', dest='filename', type=str)
     args = argparser.parse_args()
     datasetOrig = pd.read_csv(args.filename, header=None)
+    datasetOrig = shuffle(datasetOrig)
+
     data = np.array(datasetOrig)
     scaler = preprocessing.MinMaxScaler()
     data_scaled = scaler.fit_transform(data[:, :-1])
