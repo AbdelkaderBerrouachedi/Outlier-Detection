@@ -7,25 +7,8 @@ import torch
 from collections import defaultdict
 from torch.nn.modules.distance import PairwiseDistance
 
+from helpers import pairwise_distances
 
-def pairwise_distances(x, y):
-    """
-    Input: x is a Nxd matrix
-           y is an optional Mxd matrix
-    Output: dist is a NxM (Nx1 with the 0-axis sum) matrix where dist[i,j] is the square norm between x[i,:] and y[j,:]
-            if y is not given then use 'y=x'.
-    i.e. dist[i,j] = ||x[i,:]-y[j,:]||^2
-    """
-
-    n = x.shape[0]
-    m = y.shape[0]
-    d = x.shape[1]
-
-    x = x.unsqueeze(1).expand(n, m, d)
-    y = y.unsqueeze(0).expand(n, m, d)
-
-    dist = torch.sqrt(torch.pow(x - y, 2).sum(2))
-    return dist
 
 
 
@@ -42,6 +25,7 @@ class IncrementalGrowingNeuralGas:
         self.amature = amature
         self.alfac1 = alfac1
         self.alfacN = alfacN
+        self.Error = 0
 
     def findWinning(self, x):
         if self.Units is None:
@@ -103,13 +87,13 @@ class IncrementalGrowingNeuralGas:
                 newUnit = self.Units.shape[0]
 
             else:
+
                 self.Units[bestUnit] += torch.reshape(self.alfac1*(x-self.Units[bestUnit]), (-1,))
                 if bestUnit not in self.Connections.keys():
                     self.Units[newUnit] += torch.reshape(self.alfacN * (x - self.Units[newUnit]), (-1,))
                 else:
                     for index in self.Connections[bestUnit]:
                         self.Units[index] += torch.reshape(self.alfacN*(x-self.Units[index]), (-1,))
-
                 self.createConnection(bestUnit, newUnit)
                 # if(distDict['index2'] not in self.Connections[distDict['index1']]):
                 #     self.Connections[distDict['index1']].append(distDict['index2'])
@@ -123,14 +107,24 @@ class IncrementalGrowingNeuralGas:
                     self.Ages[index] += 1.0
 
 
+    def compute_global_error(self, mature_neurons, data):
+        err = pairwise_distances(mature_neurons, data)
+        mean_err = torch.mean(torch.min(err, dim=0, keepdim=True).values)
+        return mean_err
+
     def getMatureNeurons(self):
         neuronsList = []
         neuronIndexes = []
         i = 0
+
         for age in self.Ages:
             if age >= self.amature:
-                neuronsList.append(self.Units[i].data.numpy())
+                neuronsList.append(self.Units[i])
                 neuronIndexes.append(i)
             i += 1
-        return np.array(neuronsList), neuronIndexes
+        if(len(neuronsList)>0):
+            return torch.stack(neuronsList), neuronIndexes
+        else:
+            return None, None
+
 

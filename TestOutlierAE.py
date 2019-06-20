@@ -5,7 +5,7 @@ __email__ = 'ritacco.ant@gmail.com'
 import pandas as pd
 import numpy as np
 import argparse
-from gng import GrowingNeuralGas
+from gng_old import GrowingNeuralGas
 from AutoEncoder import AutoEncoder
 import torch.nn.functional as F
 import matplotlib.pyplot as plt

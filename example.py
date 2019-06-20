@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from gng import GrowingNeuralGas
+from gng_old import GrowingNeuralGas
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 import os

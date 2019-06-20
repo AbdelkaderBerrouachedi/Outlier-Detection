@@ -4,5 +4,5 @@ __pycache__/
 Save/
 *.pth
 mlp_img/
-visualization/
+visualization/*
 notebook/
