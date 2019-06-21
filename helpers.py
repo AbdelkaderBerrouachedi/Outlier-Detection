@@ -1,6 +1,20 @@
 import time
 import math
 import torch
+import collections
+import numpy as np
+"""
+Some properties
+1) ratio between number of element in the cluster and most populated cluster
+2) min distance from nearest cluster
+3) distances from k nearest centroids (min, max, avg)
+"""
+
+def time_since(since):
+    s = time.time() - since
+    m = math.floor(s / 60)
+    s -= m * 60
+    return '%dm %ds' % (m, s)
 
 
 def pairwise_distances(x, y):
@@ -22,12 +36,14 @@ def pairwise_distances(x, y):
     return dist
 
 
-def time_since(since):
-    s = time.time() - since
-    m = math.floor(s / 60)
-    s -= m * 60
-    return '%dm %ds' % (m, s)
 
+def compute_global_error(mature_neurons, data, cuda):
+    if cuda:
+        mature_neurons = mature_neurons.cuda()
+        data = data.cuda()
+    err = pairwise_distances(mature_neurons, data)
+    mean_err = torch.mean(torch.min(err, dim=0, keepdim=True).values)
+    return mean_err
 
 def min_distance_from_centroids(clusters, data):
     err = pairwise_distances(clusters, data)
@@ -55,3 +71,15 @@ def outlier_factor_in_cluster(clusters, data, k=5):
         avgtopKerr_list.append(avgtopKerr)
     avgtopKerr_tensor = torch.tensor(avgtopKerr_list)
     return torch.abs(min_errs.view(-1, 1) - avgtopKerr_tensor.view(-1, 1))
+
+def cluster_sparsity(clusters, data):
+    err = pairwise_distances(clusters, data)
+    nearest_vals = torch.min(err, dim=0, keepdim=True)
+    nearest_units = nearest_vals.indices.numpy().flatten()
+    counter = collections.Counter(nearest_units)
+    most_populated_cluster = collections.Counter(nearest_units).most_common(1)[0][1]
+    counter_dict = dict(counter)
+    data_density = []
+    for index in nearest_units:
+        data_density.append(1 - counter[index]/most_populated_cluster)
+    return np.array(data_density)

@@ -10,14 +10,18 @@ from torch.nn.modules.distance import PairwiseDistance
 from helpers import pairwise_distances
 
 
-
+'''
+Pytorch implementation of the Incremental Growing Neural Gas algorithm, based on:
+An Incremental Growing Neural Gas Learns Topologies. Y. Prudent,
+2005 IEEE International Joint Conference on Neural Networks
+'''
 
 
 
 
 class IncrementalGrowingNeuralGas:
 
-    def __init__(self, epsilon, amature, alfac1, alfacN):
+    def __init__(self, epsilon, amature, alfac1, alfacN, cuda=False):
         self.Units = None
         self.Ages = None
         self.Connections = dict()
@@ -26,6 +30,7 @@ class IncrementalGrowingNeuralGas:
         self.alfac1 = alfac1
         self.alfacN = alfacN
         self.Error = 0
+        self.cuda = cuda
 
     def findWinning(self, x):
         if self.Units is None:
@@ -66,6 +71,8 @@ class IncrementalGrowingNeuralGas:
 
 
     def forward(self, x):
+        if self.cuda:
+            x = x.cuda()
         distDict = self.findWinning(x)
         if distDict['val1'] is None or distDict['val1'] >= self.epsilon:
             if distDict['val1'] is None:
@@ -106,11 +113,6 @@ class IncrementalGrowingNeuralGas:
                 for index in self.Connections[bestUnit]:
                     self.Ages[index] += 1.0
 
-
-    def compute_global_error(self, mature_neurons, data):
-        err = pairwise_distances(mature_neurons, data)
-        mean_err = torch.mean(torch.min(err, dim=0, keepdim=True).values)
-        return mean_err
 
     def getMatureNeurons(self):
         neuronsList = []
