@@ -3,11 +3,13 @@
 import numpy as np
 from scipy import spatial
 import networkx as nx
+import time
 import matplotlib.pyplot as plt
 from sklearn import decomposition
 import copy
 import os
-
+import torch
+from helpers import compute_global_error, time_since
 
 __authors__ = 'Adrien Guille, forked by Antonio Ritacco'
 __email__ = 'adrien.guille@univ-lyon2.fr, ritacco.ant@gmail.com'
@@ -21,14 +23,10 @@ Information Processing Systems 7, 1995.
 
 class GrowingNeuralGas:
 
-    def __init__(self, input_data, output_folder='./'):
+    def __init__(self, input_data):
         self.network = None
-        self.output_folder = output_folder
         self.data = input_data
         self.units_created = 0
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        plt.style.use('ggplot')
 
     def find_nearest_units(self, observation):
         distance = []
@@ -54,13 +52,13 @@ class GrowingNeuralGas:
             self.network.remove_nodes_from(listToRemoveU)
         except:
             print('Error while removing...')
-            print('Edges to remove',listToRemoveE)
-            print('Nodes to remove',listToRemoveU)
+            print('Edges to remove', listToRemoveE)
+            print('Nodes to remove', listToRemoveU)
 
-    def fit_network(self, e_b, e_n, a_max, l, a, d, passes=1, plot_evolution=False):
+    def fit_network(self, e_b, e_n, a_max, l, a, d, passes=1, test_data=None, global_train_err=None,
+                    global_test_err=None, num_mature_neurons = None):
         # logging variables
         accumulated_local_error = []
-        global_error = []
         network_order = []
         network_size = []
         total_units = []
@@ -75,8 +73,9 @@ class GrowingNeuralGas:
         self.units_created += 1
         # 1. iterate through the data
         sequence = 0
+        start = time.time()
         for p in range(passes):
-            print('   Pass #%d' % (p + 1))
+            # print('   Pass #%d' % (p + 1))
             np.random.shuffle(self.data)
             steps = 0
             for observation in self.data:
@@ -105,9 +104,6 @@ class GrowingNeuralGas:
                 # 8. if the number of steps so far is an integer multiple of parameter l, insert a new unit
                 steps += 1
                 if steps % l == 0:
-                    if plot_evolution:
-                        print(str(self.output_folder)+'/' + str(sequence) + '.png')
-                        self.plot_network(str(self.output_folder)+'/' + str(sequence) + '.png')
                     sequence += 1
                     # 8.a determine the unit q with the maximum accumulated error
                     q = 0
@@ -149,36 +145,28 @@ class GrowingNeuralGas:
                     self.network.node[u]['error'] *= d
                     if self.network.degree(nbunch=[u]) == 0:
                         print(u)
-            global_error.append(self.compute_global_error())
-        
-        if plot_evolution:
-            plt.clf()
-            plt.title('Accumulated local error')
-            plt.xlabel('iterations')
-            plt.plot(range(len(accumulated_local_error)), accumulated_local_error)
-            plt.savefig('visualization/accumulated_local_error.png')
-            plt.clf()
-            plt.title('Global error')
-            plt.xlabel('passes')
-            plt.plot(range(len(global_error)), global_error)
-            plt.savefig('visualization/global_error.png')
-            plt.clf()
-            plt.title('Neural network properties')
-            plt.plot(range(len(network_order)), network_order, label='Network order')
-            plt.plot(range(len(network_size)), network_size, label='Network size')
-            plt.legend()
-            plt.savefig('visualization/network_properties.png')
+            # global_error.append(self.compute_global_error())
+            neurons = []
+            for k in self.network._node:
+                neurons.append(self.network._node[k]['vector'])
+            mature_torch_neurons = torch.tensor(neurons)
+            mean_train_error = compute_global_error(mature_torch_neurons, torch.tensor(self.data), cuda=True)
+            mean_test_error = compute_global_error(mature_torch_neurons, torch.tensor(test_data), cuda=True)
+            global_train_err.append(mean_train_error)
+            global_test_err.append(mean_test_error)
+            actual_mature_neurons = mature_torch_neurons.shape[0]
+            mature_neurons_ratio = num_mature_neurons[-1] / actual_mature_neurons
+            num_mature_neurons.append(actual_mature_neurons)
 
-    def plot_network(self, file_path):
-        plt.clf()
-        plt.scatter(self.data[:, 0], self.data[:, 1])
-        node_pos = {}
-        for u in self.network.nodes():
-            vector = self.network.node[u]['vector']
-            node_pos[u] = (vector[0], vector[1])
-        nx.draw(self.network, pos=node_pos)
-        plt.draw()
-        plt.savefig(file_path)
+            print(
+                "\repoch [{}/{}] - Train euclidean error : {:.4f} - Test euclidean error : {:.4f} - #mature neurons: {} - Time :{} - Process:{}%"
+                .format(p + 1, passes, mean_train_error, mean_test_error, actual_mature_neurons, time_since(start),
+                        round(p / passes * 100), 3), end="")
+            if mature_neurons_ratio > 0.98:
+                break;
+
+
+
 
     def number_of_clusters(self):
         return nx.number_connected_components(self.network)
@@ -205,19 +193,6 @@ class GrowingNeuralGas:
             transformed_clustered_data.append((transformed_observations[i], clustered_data[i][1]))
         return transformed_clustered_data
 
-    def plot_clusters(self, clustered_data):
-        number_of_clusters = nx.number_connected_components(self.network)
-        plt.clf()
-        plt.title('Cluster affectation')
-        color = ['r', 'b', 'g', 'k', 'm', 'r', 'b', 'g', 'k', 'm']
-        for i in range(number_of_clusters):
-            observations = [observation for observation, s in clustered_data if s == i]
-            if len(observations) > 0:
-                observations = np.array(observations)
-                plt.scatter(observations[:, 0], observations[:, 1], color=color[i], label='cluster #'+str(i))
-        plt.legend()
-        plt.savefig('visualization/clusters.png')
-
     def compute_global_error(self):
         global_error = 0
         for observation in self.data:
@@ -225,5 +200,6 @@ class GrowingNeuralGas:
             s_1 = nearest_units[0]
             global_error += spatial.distance.euclidean(observation, self.network.node[s_1]['vector'])**2
         return global_error
+
 
 

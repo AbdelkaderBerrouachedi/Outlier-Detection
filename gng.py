@@ -126,6 +126,10 @@ class GrowingNeuralGas:
         #             self.incidence_matrix[i, j, :] = 0
         #             self.incidence_matrix[j, i, :] = 0
         self.incidence_matrix[self.incidence_matrix[:, :, 1] > self.amature] = 0
+        # for i in range(self.incidence_matrix.shape[0]):
+        #     condition = torch.sum(self.incidence_matrix[i, :, 0]) > 0
+        #     self.incidence_matrix[i, :, :] = self.incidence_matrix[i, condition, 0]
+        #     self.incidence_matrix[:, i, :] = self.incidence_matrix[condition, i, 0]
 
     def reset_age(self, s1, s2):
         self.incidence_matrix[s1, s2, 1] = 0

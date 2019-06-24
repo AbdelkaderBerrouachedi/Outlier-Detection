@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # data = np.array(datasetOrig.iloc[:, :-1])
     # labels = np.array(datasetOrig.iloc[:, -1])
 
-    n_data = 5000
+    n_data = 2000
     n_outliers = 50
     dataset_type = 'moons'
     if dataset_type == 'blobs':
@@ -94,7 +94,7 @@ if __name__ == '__main__':
             print("\repoch [{}/{}] - Train euclidean error : {:.4f} - Test euclidean error : {:.4f} - #mature neurons: {} - Time :{} - Process:{}%"
                   .format(ep + 1, epochs, mean_train_error, mean_test_error, actual_mature_neurons, time_since(start), round(ep/epochs*100), 3), end="")
 
-            if mature_neurons_ratio <= 0.95 and (actual_mature_neurons < 0.1*train_data.shape[0]):
+            if mature_neurons_ratio <= 0.95 and (actual_mature_neurons < 0.25*train_data.shape[0]):
                 global_train_err.append(mean_train_error)
                 global_test_err.append(mean_test_error)
             else:
