@@ -4,6 +4,7 @@ __email__ = 'ritacco.ant@gmail.com'
 import numpy as np
 import torch.nn as nn
 import torch
+from torch_geometric.data import Data
 from collections import defaultdict
 from torch.nn.modules.distance import PairwiseDistance
 
@@ -43,10 +44,10 @@ class IncrementalGrowingNeuralGas:
             index2 = None
         else:
             if self.cuda:
-                distance_vector = pairwise_distances(self.Units.cuda(), x.cuda())
+                distance_vector = PairwiseDistance(self.Units.cuda(), x.cuda())
                 distance_vector.to('cpu')
             else:
-                distance_vector = pairwise_distances(self.Units, x)
+                distance_vector = PairwiseDistance(self.Units, x)
             if self.Units.shape[0] < 2:
                 tuples = torch.topk(distance_vector, k=1, largest=False)
                 val1 = tuples.values[0]

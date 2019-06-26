@@ -62,6 +62,8 @@ class GrowingNeuralGas:
         network_order = []
         network_size = []
         total_units = []
+        num_mature_neurons = []
+        mature_neurons_ratio = 0
         self.units_created = 0
         # 0. start with two units a and b at random position w_a and w_b
         w_a = [np.random.uniform(-2, 2) for _ in range(np.shape(self.data)[1])]
@@ -155,14 +157,15 @@ class GrowingNeuralGas:
             global_train_err.append(mean_train_error)
             global_test_err.append(mean_test_error)
             actual_mature_neurons = mature_torch_neurons.shape[0]
-            mature_neurons_ratio = num_mature_neurons[-1] / actual_mature_neurons
+            if len(num_mature_neurons) > 1:
+                mature_neurons_ratio = num_mature_neurons[-1] / actual_mature_neurons
             num_mature_neurons.append(actual_mature_neurons)
 
             print(
                 "\repoch [{}/{}] - Train euclidean error : {:.4f} - Test euclidean error : {:.4f} - #mature neurons: {} - Time :{} - Process:{}%"
                 .format(p + 1, passes, mean_train_error, mean_test_error, actual_mature_neurons, time_since(start),
                         round(p / passes * 100), 3), end="")
-            if mature_neurons_ratio > 0.98:
+            if mature_neurons_ratio > 0.99:
                 break;
 
 
