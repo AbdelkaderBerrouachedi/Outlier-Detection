@@ -18,16 +18,16 @@ class AutoEncoder(nn.Module):
             nn.Sigmoid())
 
         self.encoderLast = nn.Sequential(
-            nn.Linear(hiddenSize, encodedSize,bias=True),
+            nn.Linear(hiddenSize, encodedSize, bias=True),
             nn.Sigmoid()
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(encodedSize, hiddenSize,bias=True),
+            nn.Linear(encodedSize, hiddenSize, bias=True),
             nn.Sigmoid(),
             # nn.Linear(encodedSize, hiddenSize),
             # nn.ReLU(True),
-            nn.Linear(hiddenSize, inputSize,bias=True),
+            nn.Linear(hiddenSize, inputSize, bias=True),
             nn.Sigmoid())
 
 

@@ -42,11 +42,15 @@ class IncrementalGrowingNeuralGas:
             index1 = None
             index2 = None
         else:
+            pdist = PairwiseDistance(p=2)
             if self.cuda:
-                distance_vector = pairwise_distances(self.Units.cuda(), x.cuda())
+                distance_vector = pdist(self.Units.cuda(), x.cuda())
                 distance_vector.to('cpu')
+                # distance_vector = pairwise_distances(self.Units.cuda(), x.cuda())
+                # distance_vector.to('cpu')
             else:
-                distance_vector = pairwise_distances(self.Units, x)
+                distance_vector = pdist(self.Units, x)
+                # distance_vector = pairwise_distances(self.Units, x)
             if self.Units.shape[0] < 2:
                 tuples = torch.topk(distance_vector, k=1, largest=False)
                 val1 = tuples.values[0]
@@ -227,7 +231,7 @@ class IncrementalGrowingNeuralGas:
                     neuron_to_remove.append(node_id)
             if neuron_to_remove:
                 list_to_keep = list(set(list(range(0, self.Units.shape[0]))) - set(neuron_to_remove))
-                neuronsList = torch.index_select(self.Units, 0, torch.tensor(list_to_keep))
+                self.Units = torch.index_select(self.Units, 0, torch.tensor(list_to_keep))
                 self.network.remove_nodes_from(neuron_to_remove)
                 old_index_nodes = [name for name in self.network.nodes()]
                 new_index_nodes = list(range(0, len(list_to_keep)))
@@ -235,12 +239,12 @@ class IncrementalGrowingNeuralGas:
                 self.network = nx.relabel_nodes(self.network, mapping)
 
         if training:
-            if (len(neuronsList) > 0):
+            if len(neuronsList) > 0:
                 return torch.stack(neuronsList)
             else:
                 return None
         else:
-            if (neuronsList.shape[0]>0):
-                return neuronsList
+            if self.Units.shape[0] > 0:
+                return self.Units
             else:
                 return None

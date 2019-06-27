@@ -4,7 +4,7 @@ __email__ = 'ritacco.ant@gmail.com'
 import numpy as np
 import torch.nn as nn
 import torch
-from torch_geometric.data import Data
+# from torch_geometric.data import Data
 from collections import defaultdict
 from torch.nn.modules.distance import PairwiseDistance
 
@@ -43,11 +43,15 @@ class IncrementalGrowingNeuralGas:
             index1 = None
             index2 = None
         else:
+            pdist = PairwiseDistance(p=2)
             if self.cuda:
-                distance_vector = PairwiseDistance(self.Units.cuda(), x.cuda())
+                distance_vector = pdist(self.Units.cuda(), x.cuda())
                 distance_vector.to('cpu')
+                # distance_vector = pairwise_distances(self.Units.cuda(), x.cuda())
+                # distance_vector.to('cpu')
             else:
-                distance_vector = PairwiseDistance(self.Units, x)
+                distance_vector = pdist(self.Units, x)
+                # distance_vector = pairwise_distances(self.Units, x)
             if self.Units.shape[0] < 2:
                 tuples = torch.topk(distance_vector, k=1, largest=False)
                 val1 = tuples.values[0]
@@ -62,27 +66,6 @@ class IncrementalGrowingNeuralGas:
                 index2 = tuples.indices[1]
 
         return {'val1': val1, 'index1': index1, 'val2': val2, 'index2': index2}
-
-
-    def createConnection(self, bestUnit, newUnit):
-        if bestUnit not in self.Connections.keys():
-            self.Connections[bestUnit] = [newUnit]
-        else:
-            if newUnit not in self.Connections[bestUnit]:
-                self.Connections[bestUnit].append(newUnit)
-
-        if newUnit not in self.Connections.keys():
-            self.Connections[newUnit] = [bestUnit]
-        else:
-            if bestUnit not in self.Connections[newUnit]:
-                self.Connections[newUnit].append(bestUnit)
-
-
-    def create_connection(self, best_unit, new_unit):
-        self.network.add_node(best_unit)
-        self.network.add_node(new_unit)
-
-
 
 
     def _forward(self, x):

@@ -5,6 +5,7 @@ __email__ = 'ritacco.ant@gmail.com'
 import pandas as pd
 import numpy as np
 import argparse
+import os
 from gng_old import GrowingNeuralGas
 from AutoEncoder import AutoEncoder
 import torch.nn.functional as F
@@ -21,7 +22,7 @@ from sklearn.utils import shuffle
 
 RHO = 0.3
 BETA = 0.01
-NUM_EPOCHS = 100
+NUM_EPOCHS = None
 batchSIZE = 128
 encodedSIZE = 2
 noisePERC = 0.05
@@ -41,7 +42,7 @@ def kl_divergence(p, q):
     return s1 + s2
 
 
-def train(model, data, numEpochs= NUM_EPOCHS, rho = None, numHiddenNeurons = 50 , numEncodingNeurons = 30):
+def train(model, data, numEpochs= 10, rho = None, numHiddenNeurons = 50 , numEncodingNeurons = 30):
     data = torch.Tensor(data)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(
@@ -106,7 +107,10 @@ def add_noise(sample):
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-f', '--filename', dest='filename', type=str)
+    argparser.add_argument('--epochs', type=int, default=5)
+    argparser.add_argument('--save', action='store_true')
     args = argparser.parse_args()
+    NUM_EPOCHS = args.epochs
     datasetOrig = pd.read_csv(args.filename, header=None)
     datasetOrig = shuffle(datasetOrig)
 
@@ -128,7 +132,7 @@ if __name__ == '__main__':
     if RHO is not None:
         rho = torch.zeros([hiddenSize]).cuda()
         rho.fill_(RHO)
-    train(model, data_scaled, rho=rho, numHiddenNeurons=hiddenSize)
+    train(model, data_scaled, rho=rho, numHiddenNeurons=hiddenSize, numEpochs= NUM_EPOCHS)
 
     # print('\n')
     # sampleActual = Variable(torch.Tensor(data_scaled[0, :])).cuda()
@@ -149,7 +153,7 @@ if __name__ == '__main__':
 
     encoded, encoderLast, decoded = model(sampleActual)
     diffDecodedActual = torch.sum(torch.abs(sampleActual - decoded),dim=1)
-    
+
     diffDecodedActual = diffDecodedActual/torch.max(diffDecodedActual)
     resultToCPU = encoderLast.data.cpu().numpy()
     datasetResult = pd.DataFrame()
@@ -158,8 +162,12 @@ if __name__ == '__main__':
     # datasetResult['Z'] = pd.Series(resultToCPU[:, 2], index=datasetOrig.index)
     datasetResult['Diff'] = pd.Series(diffDecodedActual.data.cpu(), index=datasetOrig.index)
     datasetResult['Target'] = pd.Series(datasetOrig.iloc[:, -1], index=datasetOrig.index)
-    resultFile = str(args.filename)+'_'+'ResultEncoding.csv'
-    datasetResult.to_csv(resultFile)
+    # resultFile = str(args.filename)+'_'+'ResultEncoding.csv'
+    # datasetResult.to_csv(resultFile)
+    if args.save:
+        wksp_folder = os.path.dirname(args.filename)
+        outliers_file = os.path.join(wksp_folder, 'AE_outliers.csv')
+        datasetResult.to_csv(outliers_file)
     print('Finish')
 
     # #%%
