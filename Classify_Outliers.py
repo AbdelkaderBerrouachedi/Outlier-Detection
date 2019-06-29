@@ -38,25 +38,49 @@ test_data_7 = pd.read_csv('data/Synth/circles_moons_IGNG_outliers.csv')
 test_data_8 = pd.read_csv('data/Synth/circles_blobs_IGNG_outliers.csv')
 
 
+n_outliers = 200
 
 train_data_1 = pd.read_csv('data/Synth/Train/0.csv_IGNG_outliers.csv')#pd.read_csv('data/Cardio/IGNG_outliers.csv')
 train_data_1 = scaler.fit_transform(train_data_1)
+train_data_1_input = pd.read_csv('data/Synth/Train/0.csv',header=None)
+plt.scatter(x=train_data_1_input.iloc[:, 0], y=train_data_1_input.iloc[:, 1], s=10, c='b', marker="s", label='data')
+plt.scatter(x=train_data_1_input.iloc[:n_outliers, 0], y=train_data_1_input.iloc[:n_outliers, 1], s=12, c='G', marker="s", label='outliers')
+plt.show()
 
 train_data_2 = pd.read_csv('data/Synth/Train/1.csv_IGNG_outliers.csv')
 train_data_2 = scaler.fit_transform(train_data_2)
+train_data_2_input = pd.read_csv('data/Synth/Train/1.csv',header=None)
+plt.scatter(x=train_data_2_input.iloc[:, 0], y=train_data_2_input.iloc[:, 1], s=10, c='b', marker="s", label='data')
+plt.scatter(x=train_data_2_input.iloc[:n_outliers, 0], y=train_data_2_input.iloc[:n_outliers, 1], s=12, c='G',
+            marker="s", label='outliers')
+plt.show()
 
 train_data_3 = pd.read_csv('data/Synth/Train/2.csv_IGNG_outliers.csv')
 train_data_3 = scaler.fit_transform(train_data_3)
+train_data_3_input = pd.read_csv('data/Synth/Train/2.csv',header=None)
+plt.scatter(x=train_data_3_input.iloc[:, 0], y=train_data_3_input.iloc[:, 1], s=10, c='b', marker="s", label='data')
+plt.scatter(x=train_data_3_input.iloc[:n_outliers, 0], y=train_data_3_input.iloc[:n_outliers, 1], s=12, c='G', marker="s", label='outliers')
+plt.show()
+
 
 # train_data_4 = pd.read_csv('data/Synth/circles_blobs_IGNG_outliers.csv')
 train_data_4 = pd.read_csv('data/Synth/Train/3.csv_IGNG_outliers.csv')
 train_data_4 = scaler.fit_transform(train_data_4)
+train_data_4_input = pd.read_csv('data/Synth/Train/3.csv',header=None)
+plt.scatter(x=train_data_4_input.iloc[:, 0], y=train_data_4_input.iloc[:, 1], s=10, c='b', marker="s", label='data')
+plt.scatter(x=train_data_4_input.iloc[:n_outliers, 0], y=train_data_4_input.iloc[:n_outliers, 1], s=12, c='G', marker="s", label='outliers')
+plt.show()
+
 
 train_data_5 = pd.read_csv('data/Synth/Train/4.csv_IGNG_outliers.csv')
 train_data_5 = scaler.fit_transform(train_data_5)
+train_data_5_input = pd.read_csv('data/Synth/Train/4.csv',header=None)
+# plt.scatter(train_data_5_input.iloc[:,0],train_data_5_input.iloc[:,1])
+# plt.show()
 
 
-train_data = np.concatenate((train_data_1, train_data_2, train_data_3, train_data_4, train_data_5), axis=0)
+
+train_data = np.concatenate((train_data_1, train_data_2, train_data_3, train_data_4), axis=0)
 # train_data2 = pd.read_csv('data/Synth/Moons/blobs_IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','max_k_distances',
 #                                                                 'outlier_K_factor','lof_clusters','cluster_sparsity','label'])#pd.read_csv('data/ALOI/IGNG_outliers.csv')
 # train_data3 = pd.read_csv('data/Cardio/IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','max_k_distances',
@@ -65,10 +89,10 @@ train_data = np.concatenate((train_data_1, train_data_2, train_data_3, train_dat
 # labels_data = np.concatenate([train_data.iloc[:, -1].values, test_data.iloc[:, -1].values])
 # print(train_data.shape, test_data.shape, test_data_input.shape)
 # train_data = train_data_6
-test_data_input = pd.read_csv('data/Cardio/CardioData.csv', header=None)
+test_data_input = train_data_4_input#pd.read_csv('data/Satellite/satellite.csv', header=None)
 
-test_data = pd.read_csv('data/Cardio/IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','max_k_distances',
-                                                                'outlier_K_factor','lof_clusters','cluster_sparsity','label'])
+test_data = train_data_4 #pd.read_csv('data/Satellite/IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','max_k_distances',
+                                                               # 'outlier_K_factor','lof_clusters','cluster_sparsity','label'])
 
 # columns = list(test_data.columns)
 
@@ -123,10 +147,9 @@ compute_metrics(clf, X_test_data, y_test_data)
 y_pred_test = clf.predict(X_test_data)
 df_result = pd.DataFrame(data=np.concatenate((y_pred_test.reshape(-1, 1), y_test_data.reshape(-1, 1)),axis=1), columns=['pred', 'actual'])
 recon_outliers = test_data_input[y_pred_test == 1]
-# n_outliers = 250
 fig, ax = plt.subplots()
 ax.scatter(x=test_data_input.iloc[:, 0], y=test_data_input.iloc[:, 1], s=10, c='b', marker="s", label='data')
-# ax.scatter(x=test_data_input.iloc[:n_outliers, 0], y=test_data_input.iloc[:n_outliers, 1], s=12, c='G', marker="s", label='outliers')
+ax.scatter(x=test_data_input.iloc[:n_outliers, 0], y=test_data_input.iloc[:n_outliers, 1], s=12, c='G', marker="s", label='outliers')
 ax.scatter(x=recon_outliers.iloc[:, 0], y=recon_outliers.iloc[:, 1], s=6, c='r', marker="o", label='predicted')
 plt.show()
 

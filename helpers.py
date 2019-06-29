@@ -5,8 +5,6 @@ import collections
 import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
 from torch.nn.modules.distance import PairwiseDistance
-from pyod.models.loci import LOCI
-from pyod.models.abod import ABOD
 
 """
 Some properties
@@ -80,6 +78,15 @@ def avg_k_distance_from_centroids(err, k=5):
     vector_quantization_error = torch.mean(torch.topk(err, dim=0, k=k, largest=False).values, keepdim=True, dim=0)
     return vector_quantization_error
 
+
+def avg_k_distance_from_centroids_std(err):
+    numK_distance = torch.zeros(err.shape[1])
+    for i in range(err.shape[1]):
+        num_ = torch.sum(err[:, i] < 1.0)
+        numK_distance[i] = num_
+    return numK_distance
+
+
 def max_k_distance_from_centroids(err, k=5):
     '''
 
@@ -140,7 +147,31 @@ def local_outlier_factor_cluster(err, data, k=20, k_lof=5):
         i += 1
     return np.array(lof_score)
 
+def local_outlier_factor_cluster_std(err, data, k_lof=5):
+    '''
 
+    :param clusters: cluster centroids 2D tensor
+    :param data: data 2D tensor
+    :param k: number of nearest neighbours to consider as LOF dataset
+    :param k_lof: number of neigh to consider when computing LOF statistics
+    :return:
+    '''
+    # err = pairwise_distances(clusters, data)
+    nearest_vals = torch.min(err, dim=0, keepdim=True)
+    nearest_units = nearest_vals.indices.numpy().flatten()
+    lof_score = []
+    i = 0
+    for index in nearest_units:
+        # for each data point append their k-nearest point of the same cluster
+        # k_nearest_points = torch.topk(err[index, :], k=k, largest=False).indices.cpu().numpy()
+        current_points = err[index, :]
+        std_nearest_points = torch.le(current_points, 1.0)
+        lof = LocalOutlierFactor(n_neighbors=k_lof, contamination='auto')
+        pre_lof = -lof.fit(data[std_nearest_points]).negative_outlier_factor_
+        post_lof = -lof.fit(torch.cat((data[std_nearest_points], data[i].view(1, -1)))).negative_outlier_factor_
+        lof_score.append(abs(post_lof[-1]/np.max(pre_lof)))
+        i += 1
+    return np.array(lof_score)
 
 def cluster_sparsity(err):
     '''
@@ -160,28 +191,4 @@ def cluster_sparsity(err):
     for index in nearest_units:
         data_density.append(1 - counter[index]/most_populated_cluster)
     return np.array(data_density)
-
-def abod_cluster(err, data, k=50):
-    '''
-
-    :param clusters: cluster centroids 2D tensor
-    :param data: data 2D tensor
-    :param k: number of nearest neighbours to consider as LOF dataset
-    :param k_lof: number of neigh to consider when computing LOF statistics
-    :return:
-    '''
-    # err = pairwise_distances(clusters, data)
-    nearest_vals = torch.min(err, dim=0, keepdim=True)
-    nearest_units = nearest_vals.indices.numpy().flatten()
-    abod_score = []
-    i = 0
-    for index in nearest_units:
-        # for each data point append their k-nearest point of the same cluster
-        k_nearest_points = torch.topk(err[index, :], k=k, largest=False).indices.cpu().numpy()
-        abod = ABOD(contamination=0.1, n_neighbors=5, method='fast')
-        pre_loci = abod.fit(data[k_nearest_points]).decision_scores_
-        post_loci = abod.fit(torch.cat((data[k_nearest_points], data[i].view(1, -1)))).decision_scores_
-        abod_score.append(abs(pre_loci[-1]/np.max(post_loci)))
-        i += 1
-    return np.array(abod_score)
 

@@ -167,6 +167,10 @@ if __name__ == '__main__':
                                                      dim0=0, dim1=-1).numpy()
     print('avg_distances_from_K_centroids DONE')
 
+    avg_distances_from_K_centroids_std = torch.transpose(avg_k_distance_from_centroids_std(pairwise_err),
+                                                     dim0=0, dim1=-1).numpy()
+    print('avg_distances_from_K_centroids_STD DONE')
+
     max_distances_from_K_centroids = torch.transpose(max_k_distance_from_centroids(pairwise_err),
                                                      dim0=0, dim1=-1).numpy()
     outlier_K_factor_in_cluster = torch.transpose(outlier_factor_in_cluster(pairwise_err),
@@ -179,31 +183,36 @@ if __name__ == '__main__':
     lof_cluster = local_outlier_factor_cluster(pairwise_err, torch.tensor(data_scaled), k=20, k_lof=5)
     print('lof_cluster DONE')
 
+    lof_cluster_std = local_outlier_factor_cluster_std(pairwise_err, torch.tensor(data_scaled), k_lof=5)
+    print('lof_cluster_std DONE')
+
     # abod_cluster = abod_cluster(pairwise_err, torch.tensor(data_scaled), k=20)
     # print('loci_cluster DONE')
     if args.test:
         outliers = pd.DataFrame(data=np.concatenate((min_distances.reshape(-1, 1),
                                                      avg_distances_from_K_centroids.reshape(-1, 1),
+                                                     avg_distances_from_K_centroids_std.reshape(-1, 1),
                                                      max_distances_from_K_centroids.reshape(-1, 1),
                                                      outlier_K_factor_in_cluster.reshape(-1, 1),
                                                      lof_cluster.reshape(-1, 1),
-                                                     data_cluster_sparsity.reshape(-1, 1)),
+                                                     lof_cluster_std.reshape(-1, 1)),
                                                     axis=1),
-                                columns=['min_distances', 'avg_k_distances', 'max_k_distances', 'outlier_K_factor',
-                                         'lof_clusters', 'cluster_sparsity'])
+                                columns=['min_distances', 'avg_k_distances', 'avg_std_centroids', 'max_k_distances', 'outlier_K_factor',
+                                         'lof_clusters','lof_clusters_std'])
     else:
 
         outliers = pd.DataFrame(data=np.concatenate((min_distances.reshape(-1, 1),
                                                      avg_distances_from_K_centroids.reshape(-1, 1),
+                                                     avg_distances_from_K_centroids_std.reshape(-1, 1),
                                                      max_distances_from_K_centroids.reshape(-1, 1),
                                                      outlier_K_factor_in_cluster.reshape(-1, 1),
                                                      lof_cluster.reshape(-1, 1),
-                                                     data_cluster_sparsity.reshape(-1, 1),
-                                                     # abod_cluster.reshape(-1, 1),
+                                                     lof_cluster_std.reshape(-1, 1),
                                                      labels.reshape(-1, 1)),
                                                     axis=1),
-                                columns=['min_distances', 'avg_k_distances', 'max_k_distances', 'outlier_K_factor',
-                                         'lof_clusters', 'cluster_sparsity', 'label'])
+                                columns=['min_distances', 'avg_k_distances', 'avg_std_centroids', 'max_k_distances',
+                                         'outlier_K_factor',
+                                         'lof_clusters', 'lof_clusters_std', 'label'])
 
     if args.create or args.synth:
         # wksp_folder = os.path.dirname(args.filename)
