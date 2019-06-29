@@ -5,8 +5,6 @@ import collections
 import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
 from torch.nn.modules.distance import PairwiseDistance
-from pyod.models.loci import LOCI
-from pyod.models.abod import ABOD
 
 """
 Some properties
@@ -160,28 +158,3 @@ def cluster_sparsity(err):
     for index in nearest_units:
         data_density.append(1 - counter[index]/most_populated_cluster)
     return np.array(data_density)
-
-def abod_cluster(err, data, k=50):
-    '''
-
-    :param clusters: cluster centroids 2D tensor
-    :param data: data 2D tensor
-    :param k: number of nearest neighbours to consider as LOF dataset
-    :param k_lof: number of neigh to consider when computing LOF statistics
-    :return:
-    '''
-    # err = pairwise_distances(clusters, data)
-    nearest_vals = torch.min(err, dim=0, keepdim=True)
-    nearest_units = nearest_vals.indices.numpy().flatten()
-    abod_score = []
-    i = 0
-    for index in nearest_units:
-        # for each data point append their k-nearest point of the same cluster
-        k_nearest_points = torch.topk(err[index, :], k=k, largest=False).indices.cpu().numpy()
-        abod = ABOD(contamination=0.1, n_neighbors=5, method='fast')
-        pre_loci = abod.fit(data[k_nearest_points]).decision_scores_
-        post_loci = abod.fit(torch.cat((data[k_nearest_points], data[i].view(1, -1)))).decision_scores_
-        abod_score.append(abs(pre_loci[-1]/np.max(post_loci)))
-        i += 1
-    return np.array(abod_score)
-
