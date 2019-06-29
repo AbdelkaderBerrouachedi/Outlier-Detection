@@ -38,6 +38,8 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-f', '--filename', dest='filename', type=str)
     argparser.add_argument('--epochs', type=int, default=5)
+    argparser.add_argument('--mature', type=float, default=0.01)
+    argparser.add_argument('--eps', type=int, default=2)
     argparser.add_argument('--save', action='store_true')
     argparser.add_argument('--create', action='store_true')
     argparser.add_argument('--synth', action='store_true')
@@ -90,7 +92,7 @@ if __name__ == '__main__':
     scaler = preprocessing.StandardScaler()
     data_scaled = scaler.fit_transform(data)
     eps = np.std(data_scaled)
-    n_mature = round(0.1*data_scaled.shape[0])
+    n_mature = round(args.mature*data_scaled.shape[0])
     igng = IncrementalGrowingNeuralGas(epsilon=eps, amature=n_mature, alfac1=0.5, alfacN=0.1, cuda=True)
     numData = 0
     global_train_err = []
@@ -136,7 +138,7 @@ if __name__ == '__main__':
                       actual_mature_neurons, igng.epsilon, time_since(start), round(ep/args.epochs*100), 3), end="\n")
 
 
-        if igng.epsilon > eps/2:
+        if igng.epsilon > eps/args.eps:
             igng.epsilon = igng.epsilon - igng.epsilon * 0.15
             if actual_mature_neurons < 5:
                 igng.epsilon = igng.epsilon - igng.epsilon * 0.2
