@@ -166,10 +166,15 @@ def local_outlier_factor_cluster_std(err, data, k_lof=5):
         # k_nearest_points = torch.topk(err[index, :], k=k, largest=False).indices.cpu().numpy()
         current_points = err[index, :]
         std_nearest_points = torch.le(current_points, 1.0)
+        alfa = 1.0
+        while torch.sum(std_nearest_points) < 5:
+            alfa += 0.5
+            std_nearest_points = torch.le(current_points, 1.0*alfa)
         lof = LocalOutlierFactor(n_neighbors=k_lof, contamination='auto')
         pre_lof = -lof.fit(data[std_nearest_points]).negative_outlier_factor_
         post_lof = -lof.fit(torch.cat((data[std_nearest_points], data[i].view(1, -1)))).negative_outlier_factor_
-        lof_score.append(abs(post_lof[-1]/np.max(pre_lof)))
+        # lof_score = -lof.fit(torch.cat((data[std_nearest_points], data[i].view(1, -1)))).negative_outlier_factor_
+        lof_score.append(abs(post_lof[-1]/np.max(pre_lof))*alfa)
         i += 1
     return np.array(lof_score)
 
