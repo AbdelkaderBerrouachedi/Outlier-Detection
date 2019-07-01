@@ -185,8 +185,8 @@ if __name__ == '__main__':
     lof_cluster = local_outlier_factor_cluster(pairwise_err, torch.tensor(data_scaled), k=20, k_lof=5)
     print('lof_cluster DONE')
 
-    lof_cluster_std = local_outlier_factor_cluster_std(pairwise_err, torch.tensor(data_scaled), k_lof=5)
-    print('lof_cluster_std DONE')
+    # lof_cluster_std = local_outlier_factor_cluster_std(pairwise_err, torch.tensor(data_scaled), k_lof=5)
+    # print('lof_cluster_std DONE')
 
     # abod_cluster = abod_cluster(pairwise_err, torch.tensor(data_scaled), k=20)
     # print('loci_cluster DONE')
@@ -196,8 +196,8 @@ if __name__ == '__main__':
                                                      avg_distances_from_K_centroids_std.reshape(-1, 1),
                                                      max_distances_from_K_centroids.reshape(-1, 1),
                                                      outlier_K_factor_in_cluster.reshape(-1, 1),
-                                                     lof_cluster.reshape(-1, 1),
-                                                     lof_cluster_std.reshape(-1, 1)),
+                                                     lof_cluster.reshape(-1, 1)),
+                                                     # lof_cluster_std.reshape(-1, 1)),
                                                     axis=1),
                                 columns=['min_distances', 'avg_k_distances', 'avg_std_centroids', 'max_k_distances', 'outlier_K_factor',
                                          'lof_clusters','lof_clusters_std'])
@@ -209,12 +209,12 @@ if __name__ == '__main__':
                                                      max_distances_from_K_centroids.reshape(-1, 1),
                                                      outlier_K_factor_in_cluster.reshape(-1, 1),
                                                      lof_cluster.reshape(-1, 1),
-                                                     lof_cluster_std.reshape(-1, 1),
+                                                     # lof_cluster_std.reshape(-1, 1),
                                                      labels.reshape(-1, 1)),
                                                     axis=1),
                                 columns=['min_distances', 'avg_k_distances', 'avg_std_centroids', 'max_k_distances',
                                          'outlier_K_factor',
-                                         'lof_clusters', 'lof_clusters_std', 'label'])
+                                         'lof_clusters', 'label'])
 
     if args.create or args.synth:
         # wksp_folder = os.path.dirname(args.filename)

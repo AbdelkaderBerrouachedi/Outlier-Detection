@@ -26,8 +26,7 @@ datasets = [
 
 for i_dataset, X in enumerate(datasets):
 
-    X = np.concatenate([rng.uniform(low=-6, high=6,
-                                       size=(n_outliers, 2)), X], axis=0)
+    X = np.concatenate((rng.uniform(low=-6, high=6, size=(n_outliers, 2)),  X[n_outliers:, :]), axis=0)
     labels = []
     labels = np.zeros(X.shape[0])
     for i in range(n_outliers):
@@ -35,6 +34,8 @@ for i_dataset, X in enumerate(datasets):
     X_target = np.concatenate((X, labels.reshape(-1, 1)), axis=1)
     fig, ax = plt.subplots()
     df = pd.DataFrame(data=X_target, columns=['X', 'Y', 'target'])
-    ax.scatter(x=df.iloc[:, 0], y=df.iloc[:, 1], s=10, c='b', marker="s", label='data')
+    ax.scatter(x=df.iloc[:n_outliers, 0], y=df.iloc[:n_outliers, 1], s=10, c='b', marker="s", label='data')
+    ax.scatter(x=df.iloc[n_outliers:, 0], y=df.iloc[n_outliers:, 1], s=10, c='r', marker="s", label='data')
+
     plt.show()
-    df.to_csv('data/Synth/Train/'+str(i_dataset)+'.csv', index=None, header= None)
+    df.to_csv('data/Synth/Train_STD/'+str(i_dataset)+'.csv', index=None, header= None)

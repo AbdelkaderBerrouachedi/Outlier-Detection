@@ -89,10 +89,10 @@ train_data = np.concatenate((train_data_1, train_data_2, train_data_3, train_dat
 # labels_data = np.concatenate([train_data.iloc[:, -1].values, test_data.iloc[:, -1].values])
 # print(train_data.shape, test_data.shape, test_data_input.shape)
 # train_data = train_data_6
-test_data_input = pd.read_csv('data/Satellite/satellite.csv', header=None)
+test_data_input = pd.read_csv('data/Cardio/CardioData.csv', header=None)
 
-test_data = pd.read_csv('data/Satellite/satellite.csv_IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','avg_std_centroids','max_k_distances',
-                                                               'outlier_K_factor','lof_clusters','lof_clusters_std','label'])
+test_data = pd.read_csv('data/Cardio/CardioData.csv_IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','avg_std_centroids','max_k_distances',
+                                                               'outlier_K_factor','lof_clusters','label'])
 
 # columns = list(test_data.columns)
 

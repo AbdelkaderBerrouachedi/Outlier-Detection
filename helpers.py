@@ -147,7 +147,7 @@ def local_outlier_factor_cluster(err, data, k=20, k_lof=5):
         i += 1
     return np.array(lof_score)
 
-def local_outlier_factor_cluster_std(err, data, k_lof=5):
+def local_outlier_factor_cluster_std(err, data, k=20, k_lof = 5):
     '''
 
     :param clusters: cluster centroids 2D tensor
@@ -167,14 +167,14 @@ def local_outlier_factor_cluster_std(err, data, k_lof=5):
         current_points = err[index, :]
         std_nearest_points = torch.le(current_points, 1.0)
         alfa = 1.0
-        while torch.sum(std_nearest_points) < 5:
-            alfa += 0.5
+        while torch.sum(std_nearest_points) < k:
+            alfa += 0.2
             std_nearest_points = torch.le(current_points, 1.0*alfa)
         lof = LocalOutlierFactor(n_neighbors=k_lof, contamination='auto')
         pre_lof = -lof.fit(data[std_nearest_points]).negative_outlier_factor_
         post_lof = -lof.fit(torch.cat((data[std_nearest_points], data[i].view(1, -1)))).negative_outlier_factor_
         # lof_score = -lof.fit(torch.cat((data[std_nearest_points], data[i].view(1, -1)))).negative_outlier_factor_
-        lof_score.append(abs(post_lof[-1]/np.max(pre_lof))*alfa)
+        lof_score.append(abs(post_lof[-1]/np.mean(pre_lof)))
         i += 1
     return np.array(lof_score)
 
