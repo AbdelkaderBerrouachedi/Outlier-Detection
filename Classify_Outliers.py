@@ -5,6 +5,8 @@ import numpy as np
 from sklearn.utils import shuffle
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import IsolationForest
+
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import precision_score, accuracy_score,recall_score,f1_score,confusion_matrix,roc_auc_score,classification_report
@@ -89,9 +91,9 @@ train_data = np.concatenate((train_data_1, train_data_2, train_data_3, train_dat
 # labels_data = np.concatenate([train_data.iloc[:, -1].values, test_data.iloc[:, -1].values])
 # print(train_data.shape, test_data.shape, test_data_input.shape)
 # train_data = train_data_6
-test_data_input = pd.read_csv('data/Cardio/CardioData.csv', header=None)
+test_data_input = pd.read_csv('data/ALOI/aloi.csv', header=None)
 
-test_data = pd.read_csv('data/Cardio/CardioData.csv_IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','avg_std_centroids','max_k_distances',
+test_data = pd.read_csv('data/ALOI/aloi.csv_IGNG_outliers.csv', usecols=['min_distances','avg_k_distances','avg_std_centroids','max_k_distances',
                                                                'outlier_K_factor','lof_clusters','label'])
 
 # columns = list(test_data.columns)
@@ -134,12 +136,12 @@ compute_metrics(clf, X_test_data, y_test_data)
 # print('*** TEST ***')
 # compute_metrics(clf, test_data_ae, test_data[:, -1])
 
-# print('******** SVM **********')
-# clf = SVC(random_state=0, C=1, gamma='scale').fit(X_train_data, y_train_data)
-# print('*** TRAIN ***')
-# compute_metrics(clf, X_train_data, y_train_data)
-# print('*** TEST ***')
-# compute_metrics(clf, X_test_data, y_test_data)
+print('******** SVM **********')
+clf = SVC(random_state=0, C=1, gamma='scale').fit(X_train_data, y_train_data)
+print('*** TRAIN ***')
+compute_metrics(clf, X_train_data, y_train_data)
+print('*** TEST ***')
+compute_metrics(clf, X_test_data, y_test_data)
 
 # train_score = clf.score(train_data[:, :-1], train_data[:, -1])
 # test_score = clf.score(test_data[:, :-1], test_data[:, -1])
@@ -152,6 +154,10 @@ ax.scatter(x=test_data_input.iloc[:, 0], y=test_data_input.iloc[:, 1], s=10, c='
 ax.scatter(x=test_data_input.iloc[:n_outliers, 0], y=test_data_input.iloc[:n_outliers, 1], s=12, c='G', marker="s", label='outliers')
 ax.scatter(x=recon_outliers.iloc[:, 0], y=recon_outliers.iloc[:, 1], s=6, c='r', marker="o", label='predicted')
 plt.show()
+
+
+
+# clf = IsolationForest(n_estimators=10, warm_start=True)
 
 
 print('finish')
